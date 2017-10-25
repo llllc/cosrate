@@ -12,6 +12,7 @@ const channel = new EventEmitter();
 channel.clients = {};
 channel.subscriptions = {};
 
+// Add a listener for the join event
 channel.on('join', function(id, client) {
 	this.clients[id] = client;
 	this.subscriptions[id] = (senderId, message) => {
@@ -22,8 +23,16 @@ channel.on('join', function(id, client) {
 	this.on('broadcast', this.subscriptions[id]);
 });
 
+// Add a listener to emit the leave event
 channel.on('leave', function(id) {
+	channel.removeListener('broadcast', this.subscriptions[id]);
+	channel.emit('broadcast', id, `${id} has left the chatroom.\n`);
+});
 
+// Remove all listeners of the broadcast type
+channel.on('shutdown', () => {
+	channel.emit('broadcast', '', 'The server has shut down.\n');
+	channel.emitter.removeAllListeners('broadcast');
 });
 
 const server = net.createServer(client => {
@@ -32,10 +41,10 @@ const server = net.createServer(client => {
 	client.on('data', data => {
 		data = data.toString();
 		channel.emit('broadcast', id, data);
-	})
+	});
+	client.on('close', () => {
+		channel.emit('leave', id);
+	});
 })
 
 server.listen(8888);
-// function print(res) {
-// 	console.log("test");
-// }
