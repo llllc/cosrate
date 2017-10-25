@@ -3,16 +3,13 @@ const EventEmitter = require('events').EventEmitter;
 const events = require('events');
 const net = require('net');
 
+// Create an instance of the EventEmitter object
 const channel = new EventEmitter();
-
-// http.createServer((req, res) => {
-// 	print(res);
-// }).listen(8000, '127.0.0.1');
 
 channel.clients = {};
 channel.subscriptions = {};
 
-// Add a listener for the join event
+// Register a listener for the join event
 channel.on('join', function(id, client) {
 	// Setup welcome messages with current guest count
 	const welcome = `
@@ -28,14 +25,16 @@ channel.on('join', function(id, client) {
 	this.on('broadcast', this.subscriptions[id]);
 });
 
-// Add a listener to emit the leave event
+// Register a listener for the leave event
 channel.on('leave', function(id) {
 	channel.removeListener('broadcast', this.subscriptions[id]);
+	// triggers a broadcast event
 	channel.emit('broadcast', id, `${id} has left the chatroom.\n`);
 });
 
-// Remove all listeners of the broadcast type
+// Register a listener for shutdown event
 channel.on('shutdown', () => {
+	// triggers a broadcast event
 	channel.emit('broadcast', '', 'The server has shut down.\n');
 	channel.emitter.removeAllListeners('broadcast');
 });
@@ -57,4 +56,10 @@ const server = net.createServer(client => {
 	});
 })
 
+let color = 'blue';
+(color => {
+	console.log('the color is', color);
+})(color);
+
 server.listen(8888);
+
